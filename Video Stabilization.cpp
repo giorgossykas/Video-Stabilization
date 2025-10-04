@@ -2,10 +2,15 @@
 //
 
 #include <iostream>
+#include <opencv2//opencv.hpp>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    cv::Mat img = cv::Mat::zeros(200, 200, CV_8UC3);
+    cv::imshow("Test", img);
+    cv::waitKey(0);
+
+    std::cout << "OpenCV is working!\n";
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
