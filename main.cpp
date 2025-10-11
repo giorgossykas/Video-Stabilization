@@ -1,52 +1,52 @@
-
+// Main
 #include <iostream>
-#include <opencv2//opencv.hpp>
+#include <string>
+#include <vector>
+#include <math.h>
 
-int main()
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+int main(int argc, char** argv)
 {
+    // IO files
+    std::string filename = "resources/videos/shaky_car.mp4";
+    std::string stab_vid = "resources/videos/stabilized_output.mp4";
 
-    // Load image
-    cv::Mat img = cv::imread("resources/images/car_rgb.jpg");
-
-    // Check if image was loaded correctly
-    if (img.empty()) {
-        std::cerr << "Error: Could not open or find image" << std::endl;
+    // Read video
+    cv::VideoCapture cap(filename);
+    if (!cap.isOpened()) {
+        std::cerr << "Error: Cannot open video file!" << std::endl;
         return -1;
     }
 
-    // Convert to grayscale
-    cv::Mat gray;
-    cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+    // Parameters
+    int w = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    int h = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    double fps = cap.get(cv::CAP_PROP_FPS);
+    int numFrames = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_COUNT));
 
-    // Apply Gaussian blur
-    cv::Mat blurred;
-    cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 1.5);
+    // Video writer
+    /*
+    cv::VideoWriter writer(stab_vid,
+        cv::VideoWriter::fourcc('M', 'J', 'P', 'G'),
+        fps,
+        cv::Size(w, h));*/
 
-    // Detect edges, Canny and Sobel
-    cv::Mat cannyEdges;
-    cv::Canny(blurred, cannyEdges, 100, 200);
-    cv::Mat grad_x, abs_grad_x, grad_y, abs_grad_y, sobelEdges;
-    cv::Sobel(blurred, grad_x, CV_16S, 1, 0, 3);
-    cv::Sobel(blurred, grad_y, CV_16S, 0, 1, 3);
-    //cv::magnitude(grad_x, grad_y, sobelEdges);
-    //cv::normalize(sobelEdges, sobelEdges, 0, 255, cv::NORM_MINMAX);
-    //sobelEdges.convertTo(sobelEdges, CV_8U);
-    cv::convertScaleAbs(grad_x, abs_grad_x);
-    cv::convertScaleAbs(grad_y, abs_grad_y);
-    cv::addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, sobelEdges);
-    // addWeighted is good for display, needs CV_16S
-    // magnitude is good for numerical accuracy, needs CV_32F
+    // Read and Display frames
+    for (int i = 0; i < numFrames; i++) {
+        cv::Mat currFrame, currGray;
+        cap >> currFrame;
+        if (currFrame.empty()) break;
+        cv::cvtColor(currFrame, currGray, cv::COLOR_BGR2GRAY);
+        cv::imshow("Shaky Car", currFrame);
+        if (cv::waitKey(1) == 27) break; // press 'ESC' to exit
+    }
 
 
-    // Display the images
-    cv::imshow("Original Image", img);
-    cv::imshow("Grayscale", gray);
-    cv::imshow("Blurred", blurred);
-    cv::imshow("Canny Edges", cannyEdges);
-    cv::imshow("Sobel Edges", sobelEdges);
-
-    // Wait until any kery is pressed
-    cv::waitKey(0);
+    cap.release();
+    //writer.release();
+    cv::destroyAllWindows();
 
     return 0;
 }
