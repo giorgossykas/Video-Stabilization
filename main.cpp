@@ -42,11 +42,28 @@ int main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
+
+
+
+
         cv::Mat currFrame, currGray;
         cap >> currFrame;
         if (currFrame.empty()) break;
         cv::cvtColor(currFrame, currGray, cv::COLOR_BGR2GRAY);
+
+
+
+
+
+
+
+
+
+
+
         cv::imshow("Shaky Car", currFrame);
+
+
 
         // Add delay for fps
         auto end = std::chrono::high_resolution_clock::now();
@@ -54,10 +71,9 @@ int main(int argc, char** argv)
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         // Compute remaining delay to maintain target fps
         int delay_ms = std::max(1, framePeriod - static_cast<int>(processTime));
-        std::cout << delay_ms << std::endl;
         // Wait for the computed delay (also handles imshow() window events)
-        int key = cv::waitKey(1);
-        //if (key == 27) break; // Esc to exit
+        int key = cv::waitKey(delay_ms);
+        if (key == 27) break; // Esc to exit
 
     }
 
