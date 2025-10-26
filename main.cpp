@@ -5,9 +5,13 @@
 #include <math.h>
 #include <chrono>
 #include <thread>
+#include <vector>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
+
+// Mine
+#include "include/image_utils.h"
 
 int main(int argc, char** argv)
 {
@@ -15,32 +19,39 @@ int main(int argc, char** argv)
     std::string filename = "resources/videos/shaky_car.mp4";
     std::string stab_vid = "resources/videos/stabilized_output.mp4";
 
-    // Read video
+    // Open video
     cv::VideoCapture cap(filename);
     if (!cap.isOpened()) {
         std::cerr << "Error: Cannot open video file!" << std::endl;
-        return -1;
+        return 1;
     }
 
-    // Parameters
-    int w = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-    int h = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-    double fps = cap.get(cv::CAP_PROP_FPS);
-    int numFrames = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_COUNT));
-    int framePeriod = static_cast<int>(1000.0 / fps); // ms
-    std::cout << "Target FPS: " << fps << " (" << framePeriod << " ms per frame)\n";
+    // Video Parameters,
+    VideoInfo vidInfo = getVideoInfo(cap);
 
+    // ORB detector
+    cv::Ptr<cv::Feature2D> detector = cv::ORB::create(1000); // up to 1000 keypoints
+    
+    // BF Marcher
+    cv::BFMatcher matcher(cv::NORM_HAMMING);
+    
     // Video writer
-    /*
     cv::VideoWriter writer(stab_vid,
         cv::VideoWriter::fourcc('M', 'J', 'P', 'G'),
-        fps,
-        cv::Size(w, h));*/
+        vidInfo.fps,
+        cv::Size(vidInfo.w, vidInfo.h));
+    
 
-    // Read and Display frames
-    for (int i = 0; i < numFrames; i++) {
+    // Get first frame
+    cv::Mat prevFrame, prevGray;
+    if (!readFrame(cap, prevFrame, prevGray)) {
+        std::cerr << "Error: cannot read first frame" << std::endl;
+        return 1;
+    }
 
-        auto start = std::chrono::high_resolution_clock::now();
+    // Read and Display frames, start from 2nd frame (i==1)
+    for (int i = 1; i < vidInfo.numFrames; i++) {
+
 
 
 
@@ -48,9 +59,23 @@ int main(int argc, char** argv)
 
         cv::Mat currFrame, currGray;
         cap >> currFrame;
-        if (currFrame.empty()) break;
+        if (prevFrame.empty()) {
+            std::cerr << "Error loading images" << std::endl;
+            return 1;
+        }
         cv::cvtColor(currFrame, currGray, cv::COLOR_BGR2GRAY);
 
+        // 1. Detect keypoints and descriptors
+        std::vector<cv::KeyPoint> kp1, kp2;
+        cv::Mat des1, des2;
+        detector->detectAndCompute(prevGray, cv::noArray(), kp1, des1);
+        detector->detectAndCompute(currGray, cv::noArray(), kp2, des2);
+
+        // 2. Match descriptors using BFMatcher
+        std::vector<std::vector<cv::DMatch>> knnMatches;
+        matcher.knnMatch(des1, des2, knnMatches, 2);
+
+        
 
 
 
@@ -62,18 +87,6 @@ int main(int argc, char** argv)
 
 
         cv::imshow("Shaky Car", currFrame);
-
-
-
-        // Add delay for fps
-        auto end = std::chrono::high_resolution_clock::now();
-        auto processTime =
-            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        // Compute remaining delay to maintain target fps
-        int delay_ms = std::max(1, framePeriod - static_cast<int>(processTime));
-        // Wait for the computed delay (also handles imshow() window events)
-        int key = cv::waitKey(delay_ms);
-        if (key == 27) break; // Esc to exit
 
     }
 
