@@ -1,5 +1,4 @@
 #include "stabilization_functions.h"
-#include "image_utils.h"
 #include <iostream>
 #include <cmath>
 
@@ -19,7 +18,7 @@ void estimateMotionTransforms(cv::VideoCapture& cap,
 	}
 	for (int i = 1; i < info.numFrames; ++i) {
 		cv::Mat currFrame, currGray;
-		if (readFrame(cap, currFrame, currGray)) break; // runs the readFrame
+		if (!readFrame(cap, currFrame, currGray)) break; // runs the readFrame
 
 		// Initialize and compute keypoints and descriptors
 		std::vector<cv::KeyPoint> kp1, kp2;
@@ -79,7 +78,7 @@ void accumulateTrajectory(const std::vector<cv::Mat>& transforms,
 
 // Smooth trajectory from past and feature frames/matrices
 void smoothTrajectory(const std::vector<cv::Mat>& trajectory,
-					  std::vector<cv::Mat>& smoothedTrajectory, int radius = 5) {
+					  std::vector<cv::Mat>& smoothedTrajectory, int radius) {
 
 	int N = trajectory.size();
 	for (int i = 0; i < N; ++i) {
@@ -119,18 +118,16 @@ void applyStabilization(cv::VideoCapture& cap,
 
 	// Video writer
 	cv::VideoWriter writer(outputFile,
-		cv::VideoWriter::fourcc('M', 'J', 'P', 'G'),
+		cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
 		info.fps,
 		cv::Size(info.w, info.h));
-
+	
 	// Read first frame
 	cv::Mat currFrame, currGray;
-	if (readFrame(cap, currFrame, currGray)) return; // runs the readFrame
+	if (!readFrame(cap, currFrame, currGray)) return; // runs the readFrame
 	writer.write(currFrame);
-
-	for (size_t i = 0; i <= smoothedTrajectory.size(); ++i) {
-		if (readFrame(cap, currFrame, currGray)) break;
-
+	for (size_t i = 0; i < smoothedTrajectory.size(); ++i) {
+		if (!readFrame(cap, currFrame, currGray)) break;
 		// Compute delta
 		cv::Mat T_orig = trajectory[i];
 		cv::Mat T_smoothed = smoothedTrajectory[i];

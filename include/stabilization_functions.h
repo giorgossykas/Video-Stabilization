@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
+#include "image_utils.h"
 
 // Estimate per-frame motion
 void estimateMotionTransforms(cv::VideoCapture& cap, 
@@ -23,6 +24,5 @@ void applyStabilization(cv::VideoCapture& cap,
 	const std::vector<cv::Mat>& trajectory,
 	std::vector<cv::Mat>& smoothedTrajectory,
 	const std::string& outputFile);
-
 
 #endif

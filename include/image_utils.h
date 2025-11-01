@@ -9,7 +9,7 @@ struct VideoInfo {
 	int h; // height
 	double fps;
 	int numFrames;
-	int framePeriod;
+	double framePeriod;
 };
 
 VideoInfo getVideoInfo(cv::VideoCapture& cap);

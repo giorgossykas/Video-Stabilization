@@ -32,20 +32,30 @@ int main(int argc, char** argv)
 
     // Start processing
 
+    std::cout << "\nStarting processing\n" << std::endl;
+
     // Get vector of all frame-pair affine transforms
     std::vector<cv::Mat> transforms;
     estimateMotionTransforms(cap, vidInfo, transforms);
+
+    std::cout << "Estimated motion transforms\n" << std::endl;
 
     // Accumulate transforms
     std::vector<cv::Mat> trajectory;
     accumulateTrajectory(transforms, trajectory);
 
+    std::cout << "Accumulated transforms\n" << std::endl;
+
     // Smooth trajectory
     std::vector<cv::Mat> smoothedTrajectory;
     smoothTrajectory(trajectory, smoothedTrajectory, 5);
 
+    std::cout << "Smoothed trajectory\n" << std::endl;
+
     // Apply stabilization
     applyStabilization(cap, vidInfo, trajectory, smoothedTrajectory, stab_vid);
+
+    std::cout << "Applied stabilization\n" << std::endl;
 
     return 0;
 }
