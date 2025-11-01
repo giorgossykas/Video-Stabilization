@@ -7,7 +7,7 @@
 
 // Estimate per-frame motion
 void estimateMotionTransforms(cv::VideoCapture& cap, 
-	std::vector<cv::Mat>& transfomrs, VideoInfo& info);
+	VideoInfo& info, std::vector<cv::Mat>& transfomrs);
 
 // Accumulate Trajectory
 void accumulateTrajectory(const std::vector<cv::Mat>& transforms,
@@ -19,6 +19,7 @@ void smoothTrajectory(const std::vector<cv::Mat>& trajectory,
 
 // Apply stabilization
 void applyStabilization(cv::VideoCapture& cap,
+	VideoInfo& info,
 	const std::vector<cv::Mat>& trajectory,
 	std::vector<cv::Mat>& smoothedTrajectory,
 	const std::string& outputFile);
